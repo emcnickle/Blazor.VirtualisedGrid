@@ -1,0 +1,111 @@
+﻿@page "/counter"
+@using Blazor.VirtualisedGrid.Components
+@using Blazor.VirtualisedGrid.Interfaces
+@using Blazor.VirtualisedGrid.Models
+@rendermode InteractiveServer
+
+<PageTitle>Counter</PageTitle>
+
+
+<VirtualisedGrid Data="@dataItems"
+                 Headers="@columnHeaders"
+                 ShowHeaders="true"
+                 T="IDataItemRow"
+                 RowRenderer="@rowRenderer"
+                 Options="@virtualisationOptions"
+                 ContainerStyle="height:200px; width:800px;">
+</VirtualisedGrid>
+
+@code {
+    private VirtualisationOptions virtualisationOptions = new VirtualisationOptions
+    {
+        IsLoadOnDemand = false
+    };
+    private ItemRowRenderer rowRenderer = new ItemRowRenderer();
+    private int currentCount = 0;
+    private List<DataItem> dataItems = new List<DataItem>();
+    private List<string> columnHeaders = new List<string> { "Id", "Name", "Description" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        // Initialize with some data
+        for (int i = 0; i < 500; i++)
+        {
+            dataItems.Add(new DataItem
+            {
+                Id = i + 1,
+                Name = $"Item {i + 1}",
+                Description = $"This is the description for item {i + 1}",
+                RowIndex = i
+            });
+        }
+    }
+
+    public class ItemRowRenderer : DefaultRowRenderer<IDataItemRow>
+    {
+        public override RenderFragment BuildRowFragment(IDataItemRow row)
+        {
+            return builder =>
+            {
+                int seq = 0;
+                builder.OpenElement(seq++, "td");
+                builder.AddContent(seq++, row.Id);
+                builder.CloseElement();
+                builder.OpenElement(seq++, "td");
+                builder.AddContent(seq++, row.Name);
+                builder.CloseElement();
+                builder.OpenElement(seq++, "td");
+                builder.AddContent(seq++, row.Description);
+                builder.CloseElement();
+            };
+        }
+    }
+
+    public class DataItem : IDataItemRow
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int RowIndex { get; set; }
+
+        private Guid rowIden = Guid.NewGuid();
+        public Guid RowIdent => rowIden;
+        public IEnumerable<IVirtualisedColumn> Columns { get; set; } = new List<IVirtualisedColumn>()
+        {
+            new DataColumn("25%", 0),
+            new DataColumn("25%", 1),
+            new DataColumn("50%", 2)
+        };
+
+    public string RowTypeName => nameof(DataItem);
+
+        public bool IsHidden { get; set; }
+
+        public DataItem() { }
+        public DataItem(string Name, string Description)
+        {
+            this.Name = Name;
+            this.Description = Description;
+        }
+    }
+
+    public class DataColumn : IVirtualisedColumn
+    {
+        public string Width { get; private set; }
+        public int ColumnIndex { get; private set; }
+        public DataColumn(string width, int columnIndex)
+        {
+            Width = width;
+            ColumnIndex = columnIndex;
+        }
+    }
+
+    public interface IDataItemRow : IVirtualisedRow
+    {
+        int Id { get; set; }
+        string Name { get; set; }
+        string Description { get; set; }
+    }
+}

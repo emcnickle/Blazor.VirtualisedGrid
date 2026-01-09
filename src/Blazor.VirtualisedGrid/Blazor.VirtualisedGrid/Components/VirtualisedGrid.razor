@@ -1,0 +1,82 @@
+@using Blazor.VirtualisedGrid.Interfaces
+@using Blazor.VirtualisedGrid.Models
+@using Microsoft.AspNetCore.Components
+@typeparam T where T : IVirtualisedRow
+
+@if (Data == null || !Data.Any())
+{
+    <div>No data available.</div>
+    <span class="@_scrollObserver"></span>
+}
+else
+{
+    <div style="@GetContainerStyle(); overflow-y: auto;">
+        <table id="@_gridId" class="@TableClass">
+            @if (ShowHeaders && Headers != null)
+            {
+                <thead style="position: sticky; top: 0;" class="sticky top-0">
+                    <tr>
+                        @foreach (var header in Headers)
+                        {
+                            <th style="@GetHeaderStyle(header)">@header</th>
+                        }
+                    </tr>
+                </thead>
+            }
+            <tbody>
+                @foreach (T row in GetOrderedRows())
+                {
+                    bool doRegisterObserver = false;
+                    <tr>
+                        @if (Options.IsLoadOnDemand)
+                        {
+                            @RowRenderer.BuildRowFragment(row)
+                        }
+                        else
+                        {
+                            @if (IsRowWithinRange(row))
+                            {
+                                @if (IsEvenIndex(row))
+                                {
+                                    doRegisterObserver = true;
+                                }
+
+                                @RowRenderer.BuildRowFragment(row);
+                            }
+                            else
+                            {
+                                @RowRenderer.BuildSkeletonFragment(row);
+
+                                @if (row.RowIndex > _state.VisibleRangeEnd)
+                                {
+                                    @BuildBelowObserver(row);
+                                }
+                                else if (row.RowIndex < _state.VisibleRangeStart)
+                                {
+                                    @BuildAboveObserver(row);
+                                }
+                            }
+                        }
+
+                        @if (Options.IsLoadOnDemand && (_state.CurrentCount < TotalRowCount && (_state.CurrentCount < Options.Overflow || row.RowIndex >= _state.CurrentCount - Options.Overflow)))
+                        {
+                            @BuildScrollObserver(row);
+                        }
+                    </tr>
+                    @if (doRegisterObserver)
+                    {
+                        @if (IsWithinVisibleStartRange(row))
+                        {
+                            @BuildAboveObserver(row);
+                        }
+                        else if (IsWithinVisibleEndRange(row))
+                        {
+                            @BuildBelowObserver(row);
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
