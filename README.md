@@ -10,7 +10,7 @@ A high-performance Blazor grid component with virtualization support for dynamic
 - **Dual Grid Support**: Works with both HTML tables and Telerik Grid (via extension package)
 - **Multi-Targeting**: Supports .NET 7.0 and .NET 8.0
 
-## Installation
+## Installation (coming soon)
 
 ```bash
 dotnet add package Blazor.VirtualisedGrid
@@ -35,6 +35,8 @@ public class MyRow : IVirtualisedRow
     public int Value { get; set; }
 }
 ```
+
+Your row can define option IVirtualisedColumn objects. These allow you to define column widths to give a more accurate skeleton row for unrendered elements.
 
 ### 2. Implement IRowRenderer
 
